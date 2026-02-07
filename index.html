@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SoroCalc Pro | H.C.</title>
+    <style>
+        :root {
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8;
+            --text: #f1f5f9; --muted: #94a3b8; --green: #10b981; --border: #334155; --orange: #fb923c; --red: #ef4444;
+        }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        
+        /* Modal Aviso */
+        #disclaimer { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal { background: var(--card); padding: 20px; border-radius: 15px; border: 1px solid var(--accent); text-align: center; width: 100%; max-width: 350px; }
+        .modal h2 { color: var(--accent); margin-top: 0; }
+        .modal button { background: var(--accent); color: var(--bg); border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 15px; font-size: 1rem; }
+
+        .header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; position: relative; }
+        h1 { color: var(--accent); margin: 0; font-size: 1.2rem; }
+        .reset-btn { position: absolute; right: 0; top: 0; background: var(--red); color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; cursor: pointer; }
+        
+        .weight-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 15px; border-radius: 12px; border: 2px solid var(--accent); margin-bottom: 15px; text-align: center; }
+        .weight-card input { background: transparent; border: none; color: white; font-size: 2.5rem; width: 100%; text-align: center; outline: none; font-weight: bold; }
+        
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { padding: 10px 15px; border: 1px solid var(--border); background: var(--card); color: var(--muted); border-radius: 8px; cursor: pointer; font-size: 0.7rem; white-space: nowrap; font-weight: bold; }
+        .tab-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+        
+        .card { background: var(--card); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .card-title { font-size: 0.8rem; font-weight: bold; color: var(--accent); margin-bottom: 10px; border-left: 3px solid var(--accent); padding-left: 8px; text-transform: uppercase; }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        .info-tig { background: rgba(251, 146, 60, 0.1); border: 1px solid var(--orange); color: var(--orange); padding: 8px; border-radius: 8px; font-size: 0.8rem; text-align: center; margin-bottom: 10px; font-weight: bold; }
+        
+        label { font-size: 0.65rem; color: var(--muted); font-weight: bold; display: block; margin-bottom: 2px; }
+        select, input.small { width: 100%; background: #0f172a; color: white; border: 1px solid var(--border); padding: 8px; border-radius: 6px; font-size: 0.85rem; box-sizing: border-box; }
+        
+        .table-wrapper { overflow-x: auto; margin: 10px 0; border-radius: 8px; background: #0f172a; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.7rem; min-width: 450px; }
+        th { background: #1e293b; color: var(--muted); padding: 6px; border: 1px solid var(--border); }
+        td { padding: 8px 5px; text-align: center; border: 1px solid var(--border); color: #fff; }
+        .highlight { color: var(--accent); font-weight: bold; }
+        
+        .presc-area { position: relative; margin-top: 10px; }
+        .prescricao { background: #020617; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 0.8rem; color: var(--green); line-height: 1.4; border-left: 3px solid var(--green); white-space: pre-wrap; }
+        .copy-btn { position: absolute; top: 5px; right: 5px; background: var(--border); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.6rem; cursor: pointer; }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="disclaimer">
+    <div class="modal">
+        <h2>Aviso Legal</h2>
+        <p>Suporte de cálculo para o H.C. A decisão final é do médico.</p>
+        <button onclick="document.getElementById('disclaimer').style.display='none'">CONCORDAR</button>
+    </div>
+</div>
+
+<div class="header">
+    <h1>SoroCalc Pro <small>H.C.</small></h1>
+    <button class="reset-btn" onclick="resetApp()">LIMPAR</button>
+</div>
+
+<div class="weight-card">
+    <label>PESO (KG)</label>
+    <input type="number" id="peso" inputmode="decimal" placeholder="0.0" oninput="calcular()">
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" onclick="tab(event, 'm')">MANUTENÇÃO</button>
+    <button class="tab-btn" onclick="tab(event, 'r')">REPOSIÇÃO</button>
+    <button class="tab-btn" onclick="tab(event, 'i')">ISOTÔNICO</button>
+    <button class="tab-btn" onclick="tab(event, 'e')">EXPANSÃO</button>
+</div>
+
+<div id="tab-m" class="tab-content">
+    <div class="card">
+        <div class="card-title">Manutenção + TIG</div>
+        <div id="tigB" class="info-tig">TIG Basal: ---</div>
+        <div class="grid-inputs">
+            <div><label>Na%</label><select id="naM" onchange="calcular()"><option value="1.7">10%</option><option value="3.4" selected>20%</option></select></div>
+            <div><label>K%</label><select id="kM" onchange="calcular()"><option value="1.34">10%</option><option value="2.0" selected>15%</option></select></div>
+            <div><label>TIG Alvo</label><input type="number" id="tigA" class="small" value="0" oninput="calcular()"></div>
+            <div><label>Vol (24h)</label><input type="number" id="volM" class="small" placeholder="Holliday" oninput="calcular()"></div>
+        </div>
+        <div class="table-wrapper"><table id="tblM"></table></div>
+        <div class="presc-area"><button class="copy-btn" onclick="copy('txtM')">COPIAR</button><div class="prescricao" id="txtM">Insira o peso...</div></div>
+    </div>
+    <div class="card"><div class="card-title">Fisiológica</div><div class="table-wrapper"><table id="tblF"></table></div><div class="presc-area"><button class="copy-btn" onclick="copy('txtF')">COPIAR</button><div class="prescricao" id="txtF"></div></div></div>
+    <div class="card"><div class="card-title">Dra. Stella</div><div class="table-wrapper"><table id="tblS"></table></div><div class="presc-area"><button class="copy-btn" onclick="copy('txtS')">COPIAR</button><div class="prescricao" id="txtS"></div></div></div>
+</div>
+
+<div id="tab-r" class="tab-content hidden">
+    <div class="card"><div class="card-title">Reposição</div><label>Perda ml/kg</label><select id="perda" onchange="calcular()"><option value="50">50</option><option value="100" selected>100</option></select><div class="table-wrapper"><table id="tblR"></table></div><div class="presc-area"><button class="copy-btn" onclick="copy('txtR')">COPIAR</button><div class="prescricao" id="txtR"></div></div></div>
+</div>
+
+<div id="tab-i" class="tab-content hidden">
+    <div class="card"><div class="card-title">Isotônica</div><div class="grid-inputs"><div><label>Na%</label><select id="naI" onchange="calcular()"><option value="1.7">10%</option><option value="3.4" selected>20%</option></select></div><div><label>K%</label><select id="kI" onchange="calcular()"><option value="1.34">10%</option><option value="2.0" selected>15%</option></select></div></div><div class="table-wrapper"><table id="tblI"></table></div><div class="presc-area"><button class="copy-btn" onclick="copy('txtI')">COPIAR</button><div class="prescricao" id="txtI"></div></div></div>
+</div>
+
+<div id="tab-e" class="tab-content hidden">
+    <div class="card"><div class="card-title">Expansão</div><label>Meta ml/kg</label><input type="number" id="meta" class="small" value="100" oninput="calcular()"><div class="table-wrapper"><table id="tblE"></table></div><div class="presc-area"><button class="copy-btn" onclick="copy('txtE')">COPIAR</button><div class="prescricao" id="txtE"></div></div></div>
+</div>
+
+<script>
+const rnd = (n) => Math.round(n * 10) / 10;
+
+function tab(e, n) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + n).classList.remove('hidden');
+    e.currentTarget.classList.add('active');
+}
+
+function copy(id) {
+    const t = document.getElementById(id).innerText;
+    navigator.clipboard.writeText(t).then(() => alert("Copiado!"));
+}
+
+function resetApp() {
+    if(confirm("Limpar dados?")) {
+        document.getElementById('peso').value = '';
+        document.getElementById('volM').value = '';
+        document.getElementById('tigA').value = '0';
+        calcular();
+    }
+}
+
+function calcular() {
+    const p = parseFloat(document.getElementById('peso').value) || 0;
+    if (p <= 0) return;
+
+    let vH = (p <= 10) ? p * 100 : (p <= 20) ? 1000 + (p-10)*50 : 1500 + (p-20)*20;
+    const vMan = parseFloat(document.getElementById('volM').value);
+    if (vMan > 0) vH = vMan;
+
+    const bic = rnd(vH/24); const gts = Math.round(bic/3);
+    const tigBasal = rnd((vH * 50) / (p * 1440));
+    document.getElementById('tigB').innerText = `TIG Basal: ${tigBasal} mg/kg/min`;
+
+    // 1. Manutenção
+    const tA = parseFloat(document.getElementById('tigA').value) || 0;
+    const nS = document.getElementById('naM'); const kS = document.getElementById('kM');
+    const mNa = rnd((vH * 0.03) / parseFloat(nS.value));
+    const mK = rnd((vH * 0.025) / parseFloat(kS.value));
+    const mG50 = rnd(((tA * p * 1.44) - (vH * 0.05)) / 0.45);
+    const mSG5 = rnd(vH - mNa - mK - (mG50 > 0 ? mG50 : 0));
+    
+    document.getElementById('tblM').innerHTML = `<thead><tr><th>Vol</th><th>NaCl</th><th>KCl</th><th>SG5%</th><th>G50%</th><th>BIC</th></tr></thead><tbody><tr><td>${vH}</td><td>${mNa}</td><td>${mK}</td><td>${mSG5}</td><td class="highlight">${mG50>0?mG50:0}</td><td class="highlight">${bic}</td></tr></tbody>`;
+    document.getElementById('txtM').innerText = `MANUTENÇÃO 6/6h:\n- SG 5%: ${rnd(mSG5/4)}ml\n- G 50%: ${mG50>0?rnd(mG50/4):0}ml\n- NaCl ${nS.options[nS.selectedIndex].text}: ${rnd(mNa/4)}ml\n- KCl ${kS.options[kS.selectedIndex].text}: ${rnd(mK/4)}ml\nBIC: ${bic} ml/h (${gts} gts)`;
+
+    // 2. Fisiológica
+    const fSf = rnd((p*3)/0.154); const fK = rnd((p*5)/2.0); const fSg = rnd(vH-fSf);
+    document.getElementById('tblF').innerHTML = `<thead><tr><th>Vol</th><th>SF0,9%</th><th>KCl15%</th><th>SG5%</th><th>BIC</th></tr></thead><tbody><tr><td>${vH}</td><td>${fSf}</td><td>${fK}</td><td>${fSg}</td><td>${bic}</td></tr></tbody>`;
+    document.getElementById('txtF').innerText = `FISIOLÓGICA 6/6h:\n- SG 5%: ${rnd(fSg/4)}ml\n- SF 0,9%: ${rnd(fSf/4)}ml\n- KCl 15%: ${rnd(fK/4)}ml\nBIC: ${bic} ml/h (${gts} gts)`;
+
+    // 3. Stella
+    const sSf = rnd(vH/5); const sK = rnd((vH/100*5)/2.0); const sSg = rnd(vH*0.8);
+    document.getElementById('tblS').innerHTML = `<thead><tr><th>Vol</th><th>SF0,9%</th><th>KCl15%</th><th>SG5%</th><th>BIC</th></tr></thead><tbody><tr><td>${vH}</td><td>${sSf}</td><td>${sK}</td><td>${sSg}</td><td>${bic}</td></tr></tbody>`;
+    document.getElementById('txtS').innerText = `STELLA 6/6h:\n- SG 5%: ${rnd(sSg/4)}ml\n- SF 0,9%: ${rnd(sSf/4)}ml\n- KCl 15%: ${rnd(sK/4)}ml\nBIC: ${bic} ml/h (${gts} gts)`;
+
+    // 4. Reposição
+    const vR = p * parseFloat(document.getElementById('perda').value);
+    const rSf = rnd(vR/2); const rK = rnd((vR/100)*2.5); const bR = rnd(vR/24);
+    document.getElementById('tblR').innerHTML = `<thead><tr><th>Vol</th><th>SF0,9%</th><th>SG5%</th><th>KCl15%</th><th>BIC</th></tr></thead><tbody><tr><td>${vR}</td><td>${rSf}</td><td>${rSf}</td><td>${rK}</td><td>${bR}</td></tr></tbody>`;
+    document.getElementById('txtR').innerText = `REPOSIÇÃO 6/6h:\n- SG 5%: ${rnd(rSf/4)}ml\n- SF 0,9%: ${rnd(rSf/4)}ml\n- KCl 15%: ${rnd(rK/4)}ml\nBIC: ${bR} ml/h (${Math.round(bR/3)} gts)`;
+
+    // 5. Isotônico
+    const ni = document.getElementById('naI'); const ki = document.getElementById('kI');
+    const mNaI = rnd((vH * 0.135) / parseFloat(ni.value));
+    const mKI = rnd(((vH / 100) * 1.9) / parseFloat(ki.value));
+    const mSgI = rnd(vH - mNaI - mKI);
+    document.getElementById('tblI').innerHTML = `<thead><tr><th>Vol</th><th>NaCl</th><th>KCl</th><th>SG5%</th><th>BIC</th></tr></thead><tbody><tr><td>${vH}</td><td>${mNaI}</td><td>${mKI}</td><td>${mSgI}</td><td>${bic}</td></tr></tbody>`;
+    document.getElementById('txtI').innerText = `ISOTÔNICA 6/6h:\n- SG 5%: ${rnd(mSgI/4)}ml\n- NaCl ${ni.options[ni.selectedIndex].text}: ${rnd(mNaI/4)}ml\n- KCl ${ki.options[ki.selectedIndex].text}: ${rnd(mKI/4)}ml\nBIC: ${bic} ml/h (${gts} gts)`;
+
+    // 6. Expansão
+    const mEt = p * (parseFloat(document.getElementById('meta').value) || 0);
+    const etp = rnd(mEt * 0.2); const rst = rnd(mEt * 0.4); const bE = rnd(rst / 3);
+    document.getElementById('tblE').innerHTML = `<thead><tr><th>Total</th><th>Etapa</th><th>Resto</th><th>BIC</th></tr></thead><tbody><tr><td>${mEt}</td><td>${etp}</td><td>${rst}</td><td>${bE}</td></tr></tbody>`;
+    document.getElementById('txtE').innerText = `EXPANSÃO:\n1. 3 etapas de ${etp}ml SF 0,9% (cada 20 min)\n2. Após 1h, ${rst}ml SF ou RL em 3h\nBIC: ${bE} ml/h (${Math.round(bE/3)} gts)`;
+}
+</script>
+</body>
+</html>
